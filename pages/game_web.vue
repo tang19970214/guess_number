@@ -92,7 +92,6 @@ const handleSubmit = async () => {
 
 /* 取得作答結果 */
 const getResult = (answer: string) => {
-  console.log(answer, generateNum.value);
   const answerStr = answer.toString().split('')
   const resultStr = generateNum.value.toString().split('')
   const commonCount = answerStr.filter((num) => resultStr.includes(num)) // 找出是否有一樣的數字
