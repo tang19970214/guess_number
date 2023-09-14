@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 const route: any = useRoute()
-const router: any = useRouter()
 const { $swal } = useNuxtApp() as any
 
+const gameFinish = ref(false) // 遊戲是否已結束
 /* 產生隨機數字 */
 const generateNum = ref('')
 const handleGenerateNums = (numberNum: number = 4) => {
@@ -57,7 +57,7 @@ const onInput = (el: any, idx: number) => {
   if (!!el.target.value) {
     if (idx < 4) {
       nowFocus.value = `insertField${idx + 1}`
-    } else {
+    } else if (!!insertField1.value && !!insertField2.value && !!insertField3.value) {
       handleSubmit()
     }
   } else {
@@ -123,6 +123,8 @@ const getResult = (answer: string) => {
     const resultB = getAnsPosIdx.filter((item) => !getResPosIdx.find((i) => item.num === i.num && item.idx === i.idx))
 
     if (resultA.length === 4) {
+      gameFinish.value = true
+
       $swal.fire({
         icon: 'success',
         title: `『${generateNum.value}』恭喜答對！`,
@@ -145,8 +147,6 @@ const getResult = (answer: string) => {
       }).then((result: any) => {
         if (result.isConfirmed) {
           window.location.reload()
-        } else {
-          router.push('/')
         }
       })
     }
@@ -187,6 +187,8 @@ const handleRestart = () => {
       disable_num.value = []
       insertList.value = []
       handleGenerateNums()
+
+      gameFinish.value = false
     }
   })
 }
@@ -217,7 +219,7 @@ onMounted(() => {
       <!-- 標記區 -->
       <div class="w-full flex items-center justify-center flex-wrap gap-1 md:gap-2">
         <strong class="text-xl">標記區：</strong>
-        <button @click="handleChangeNumStatus(number)" v-for="number in all_number" :key="number"
+        <button @click="handleChangeNumStatus(number)" v-for="number in all_number" :key="number" :disabled="gameFinish"
           :class="[disable_num.includes(number) ? 'bg-gray-400 shadow-inner' : 'bg-white shadow-md hover:bg-gray-200']"
           class="min-w-30px max-w-30px min-h-30px max-h-30px md:min-w-40px md:max-w-40px md:min-h-40px md:max-h-40px text-black md:text-lg font-bold border-px border-solid border-#888 rounded-lg border-px border-solid flex items-center justify-center cursor-pointer duration-300">
           {{ number }}
@@ -238,18 +240,20 @@ onMounted(() => {
       <!-- 輸入區 -->
       <div
         class="w-full pt-2 border-t-px border-t-solid border-#bbbbbb mt-auto flex items-center justify-center gap-3 md:gap-5 flex-wrap">
-        <input @input="onInput($event, 1)" v-model="insertField1" v-focus="nowFocus === 'insertField1'" type="tel"
-          maxlength="1" class="w-35px md:w-60px rounded py-1 px-2 border-px text-lg text-center">
+        <input @input="onInput($event, 1)" v-model="insertField1" :disabled="gameFinish"
+          v-focus="nowFocus === 'insertField1'" type="tel" maxlength="1"
+          class="w-35px md:w-60px rounded py-1 px-2 border-px text-lg text-center">
         <input @input="onInput($event, 2)" @keydown="handleKeydown($event, 2)" v-model="insertField2"
-          v-focus="nowFocus === 'insertField2'" type="tel" maxlength="1"
+          :disabled="gameFinish" v-focus="nowFocus === 'insertField2'" type="tel" maxlength="1"
           class="w-35px md:w-60px rounded py-1 px-2 border-px text-lg text-center">
         <input @input="onInput($event, 3)" @keydown="handleKeydown($event, 3)" v-model="insertField3"
-          v-focus="nowFocus === 'insertField3'" type="tel" maxlength="1"
+          :disabled="gameFinish" v-focus="nowFocus === 'insertField3'" type="tel" maxlength="1"
           class="w-35px md:w-60px rounded py-1 px-2 border-px text-lg text-center">
         <input @input="onInput($event, 4)" @keydown="handleKeydown($event, 4)" v-model="insertField4"
-          v-focus="nowFocus === 'insertField4'" type="tel" maxlength="1"
+          :disabled="gameFinish" v-focus="nowFocus === 'insertField4'" type="tel" maxlength="1"
           class="w-35px md:w-60px rounded py-1 px-2 border-px text-lg text-center">
-        <button @click="handleSubmit()" :disabled="!insertField1 || !insertField2 || !insertField3 || !insertField4"
+        <button @click="handleSubmit()"
+          :disabled="!insertField1 || !insertField2 || !insertField3 || !insertField4 || gameFinish"
           class="py-1 md:py-1.5 px-2.5 md:px-4 text-lg border-none bg-#F29600 text-white rounded-lg cursor-pointer duration-300 hover:bg-opacity-80">送出</button>
       </div>
     </div>

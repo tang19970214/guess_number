@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 const route: any = useRoute()
-const router: any = useRouter()
 const { $swal } = useNuxtApp() as any
 
+const gameFinish = ref(false) // 遊戲是否已結束
 /* 產生隨機數字 */
 const generateNum = ref('')
 const handleGenerateNums = (numberNum: number = 4) => {
@@ -17,7 +17,7 @@ const handleGenerateNums = (numberNum: number = 4) => {
   generateNum.value = uniqueNums.join('')
 }
 
-const all_number = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 0])
+const all_number = ref([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 const disable_num = ref<Number[]>([])
 
 /* 變更標記區數字狀態 */
@@ -106,6 +106,8 @@ const getResult = (answer: string) => {
     const resultB = getAnsPosIdx.filter((item) => !getResPosIdx.find((i) => item.num === i.num && item.idx === i.idx))
 
     if (resultA.length === 4) {
+      gameFinish.value = true
+
       $swal.fire({
         icon: 'success',
         title: `『${generateNum.value}』恭喜答對！`,
@@ -115,6 +117,10 @@ const getResult = (answer: string) => {
               <p>本次作答次數：</p>
               <strong class="text-2xl">${insertList.value.length + 1}</strong>
               <p>次</p>
+            </div>
+            <div class="w-auto flex items-center gap-2 text-lg">
+              <p>本次用時：</p>
+              <strong class="text-2xl">${getTimerFormat.value}</strong>
             </div>
 
             <strong class="text-4xl bg-red-200 text-red-500">是否再來一局？</strong>
@@ -126,10 +132,10 @@ const getResult = (answer: string) => {
         cancelButtonText: '否',
         cancelButtonColor: '#d33'
       }).then((result: any) => {
+        timer.value = 0
+
         if (result.isConfirmed) {
           window.location.reload()
-        } else {
-          router.push('/')
         }
       })
     }
@@ -170,9 +176,26 @@ const handleRestart = () => {
       disable_num.value = []
       insertList.value = []
       handleGenerateNums()
+
+      gameFinish.value = false
     }
   })
 }
+
+const timer = ref(0) as any
+const getTimerFormat = computed(() => {
+  let min: string | number = Math.floor(timer.value / 60)
+  let sec: string | number = timer.value % 60
+
+  return `${min < 10 ? `0${min}` : min}` + ':' + `${sec < 10 ? `0${sec}` : sec}`;
+})
+const timerControl = setInterval(() => {
+  timer.value += 1
+}, 1000)
+
+watch(gameFinish, () => {
+  clearInterval(timerControl)
+})
 
 onMounted(() => {
   handleGenerateNums(route?.query?.num)
@@ -180,35 +203,37 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="w-full h-full p-2 box-border">
-    <div class="w-full h-full p-1 box-border rounded-xl border-px border-solid border-#888 flex flex-col gap-2">
+  <section class="w-full h-full p-1 box-border">
+    <div
+      class="w-full h-full p-1 box-border rounded-t-xl rounded-b-45px border-px border-solid border-#888 flex flex-col gap-2">
       <!-- tool -->
       <div class="w-full flex items-center justify-between gap-3">
         <button @click="handleBack()"
-          class="px-1.5 flex items-center gap-1 text-lg border-none bg-#F29600 text-white rounded-full cursor-pointer duration-300 hover:bg-opacity-80">
+          class="px-1.5 flex items-center gap-1 text-lg border-none bg-#F29600 text-white rounded-full duration-300 hover:bg-opacity-80">
           <Icon name="ic:sharp-arrow-back" color="white" size="24px" />
           <span>回首頁</span>
         </button>
+        <p>{{ getTimerFormat }}</p>
         <button @click="handleRestart()"
-          class="px-1.5 flex items-center gap-1 text-lg border-none bg-#F29600 text-white rounded-full cursor-pointer duration-300 hover:bg-opacity-80">
+          class="px-1.5 flex items-center gap-1 text-lg border-none bg-#F29600 text-white rounded-full duration-300 hover:bg-opacity-80">
           <Icon name="material-symbols:sync-outline" color="white" size="24px" />
           <span>重新開始</span>
         </button>
       </div>
 
       <!-- 標記區 -->
-      <div class=" w-full flex items-center justify-center flex-wrap gap-1">
+      <div class="w-full mt-2 flex items-center justify-center flex-wrap gap-1">
         <strong class="text-sm">標記區：</strong>
-        <button @click="handleChangeNumStatus(number)" v-for="number in all_number" :key="number"
-          :class="[disable_num.includes(number) ? 'bg-gray-400 shadow-inner' : 'bg-white shadow-md hover:bg-gray-200']"
-          class="min-w-25px max-w-25px min-h-25px max-h-25px text-black font-bold border-px border-solid border-#888 rounded-lg border-px border-solid flex items-center justify-center cursor-pointer duration-300">
+        <button @click="handleChangeNumStatus(number)" v-for="number in all_number" :key="number" :disabled="gameFinish"
+          :class="[disable_num.includes(number) ? 'bg-gray-400 shadow-inner' : 'bg-white shadow-md']"
+          class="min-w-27px max-w-27px min-h-27px max-h-27px text-black font-bold border-px border-solid border-#888 rounded-lg border-px border-solid flex items-center justify-center">
           {{ number }}
         </button>
       </div>
 
       <!-- 作答區 -->
       <div
-        class="w-full h-[calc(100%-250px)] p-1 border-3px border-dashed border-#888 box-border rounded grid grid-cols-1 place-content-start lg:grid-cols-2 gap-3 overflow-y-auto">
+        class="w-full h-[calc(100%-258px)] p-1 border-3px border-dashed border-#888 box-border rounded grid grid-cols-1 place-content-start lg:grid-cols-2 gap-3 overflow-y-auto">
         <div v-for="item in insertList" :key="item.id"
           class="w-full h-content py-1 px-3 box-border border-px border-solid border-#888 rounded tracking-widest flex items-center justify-between">
           <p>{{ item.id }}</p>
@@ -225,18 +250,20 @@ onMounted(() => {
         </div>
 
         <div class="w-auto ml-auto flex items-center gap-2">
-          <button @click="handleBackSpace()" class="py-1 px-2.5 text-lg border-none bg-#F29600 text-white rounded-lg">
+          <button @click="handleBackSpace()" :disabled="gameFinish"
+            class="py-1 px-2.5 text-lg border-none bg-#F29600 text-white rounded-lg">
             <Icon name="ic:outline-backspace" color="white" size="20px" />
           </button>
-          <button @click="handleSubmit()" :disabled="!checkValid"
+          <button @click="handleSubmit()" :disabled="!checkValid || gameFinish"
             class="py-1 px-2.5 text-lg border-none bg-#F29600 text-white rounded-lg">送出</button>
         </div>
       </div>
 
       <div class="w-full grid grid-cols-5 place-content-center place-items-center gap-2">
-        <button @click="handleInsertNum(i - 1)" v-for="i in 10" :key="i" :disabled="disable_num.includes(i - 1)"
-          :class="[disable_num.includes(i - 1) ? 'bg-gray-400 shadow-inner' : ' bg-white shadow-md hover:bg-gray-200']"
-          class="min-w-50px max-w-50px min-h-50px max-h-50px text-xl text-black font-bold border-px border-solid border-#888 rounded-lg border-px border-solid flex items-center justify-center cursor-pointer duration-300">
+        <button @click="handleInsertNum(i - 1)" v-for="i in 10" :key="i"
+          :disabled="disable_num.includes(i - 1) || gameFinish"
+          :class="[disable_num.includes(i - 1) ? 'bg-gray-400 shadow-inner' : 'bg-white shadow-md']"
+          class="min-w-50px max-w-50px min-h-50px max-h-50px text-xl text-black font-bold border-px border-solid border-#888 rounded-lg border-px border-solid flex items-center justify-center">
           {{ i - 1 }}
         </button>
       </div>

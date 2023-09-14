@@ -19,7 +19,7 @@ export default defineNuxtConfig({
     manifest: {
       name: '猜數字(1A2B)',
       short_name: '猜數字(1A2B)',
-      theme_color: '#F29600',
+      theme_color: '#FEF9C3',
       description: "基於Nuxt3+Typescript開發的簡易小遊戲。",
       display: "fullscreen",
       icons: [
