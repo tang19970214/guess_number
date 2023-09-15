@@ -234,7 +234,7 @@ onMounted(() => {
 
       <!-- 作答區 -->
       <div
-        class="w-full h-[calc(100%-258px)] p-1 border-3px border-dashed border-#888 box-border rounded grid grid-cols-1 place-content-start gap-2 overflow-y-auto">
+        class="w-full h-[calc(100%-258px)] p-1 border-3px border-dashed border-#888 box-border rounded flex flex-col gap-1 overflow-y-auto">
         <div v-for="item in insertList" :key="item.id"
           class="w-full h-content py-1 px-3 box-border border-px border-solid border-#888 rounded tracking-widest flex items-center justify-between">
           <p>{{ item.id }}</p>
