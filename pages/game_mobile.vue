@@ -161,6 +161,21 @@ const handleBack = () => {
   })
 }
 
+const timer = ref(0) as any
+const getTimerFormat = computed(() => {
+  let min: string | number = Math.floor(timer.value / 60)
+  let sec: string | number = timer.value % 60
+
+  return `${min < 10 ? `0${min}` : min}` + ':' + `${sec < 10 ? `0${sec}` : sec}`;
+})
+const timerControl = setInterval(() => {
+  timer.value += 1
+}, 1000)
+
+watch(gameFinish, () => {
+  clearInterval(timerControl)
+})
+
 /* 重新開始 */
 const handleRestart = () => {
   $swal.fire({
@@ -177,25 +192,11 @@ const handleRestart = () => {
       insertList.value = []
       handleGenerateNums()
 
+      timer.value = 0
       gameFinish.value = false
     }
   })
 }
-
-const timer = ref(0) as any
-const getTimerFormat = computed(() => {
-  let min: string | number = Math.floor(timer.value / 60)
-  let sec: string | number = timer.value % 60
-
-  return `${min < 10 ? `0${min}` : min}` + ':' + `${sec < 10 ? `0${sec}` : sec}`;
-})
-const timerControl = setInterval(() => {
-  timer.value += 1
-}, 1000)
-
-watch(gameFinish, () => {
-  clearInterval(timerControl)
-})
 
 onMounted(() => {
   handleGenerateNums(route?.query?.num)
@@ -226,14 +227,14 @@ onMounted(() => {
         <strong class="text-sm">標記區：</strong>
         <button @click="handleChangeNumStatus(number)" v-for="number in all_number" :key="number" :disabled="gameFinish"
           :class="[disable_num.includes(number) ? 'bg-gray-400 shadow-inner' : 'bg-white shadow-md']"
-          class="min-w-27px max-w-27px min-h-27px max-h-27px text-black font-bold border-px border-solid border-#888 rounded-lg border-px border-solid flex items-center justify-center">
+          class="min-w-25px max-w-25px min-h-25px max-h-25px text-black font-bold border-px border-solid border-#888 rounded-lg border-px border-solid flex items-center justify-center">
           {{ number }}
         </button>
       </div>
 
       <!-- 作答區 -->
       <div
-        class="w-full h-[calc(100%-258px)] p-1 border-3px border-dashed border-#888 box-border rounded grid grid-cols-1 place-content-start lg:grid-cols-2 gap-3 overflow-y-auto">
+        class="w-full h-[calc(100%-258px)] p-1 border-3px border-dashed border-#888 box-border rounded grid grid-cols-1 place-content-start gap-2 overflow-y-auto">
         <div v-for="item in insertList" :key="item.id"
           class="w-full h-content py-1 px-3 box-border border-px border-solid border-#888 rounded tracking-widest flex items-center justify-between">
           <p>{{ item.id }}</p>
